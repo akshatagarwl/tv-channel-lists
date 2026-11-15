@@ -1,0 +1,33 @@
+{
+  "aislist": {
+    "repository": "theSiegs/aislist-channel-ids",
+    "commit": "199e405f3e4f2a846610846136203f5a1645093d",
+    "files": ["lists/aislist_blocklist_ids.txt", "lists/aislist_blocklist_channels.tsv"],
+    "credit": "AiSList contributors / Override92/AiSList; channel-ID conversion by theSiegs",
+    "license": "CC BY-NC 4.0 (list data)",
+    "scope": "High-confidence blocklist only; excludes the warnlist"
+  },
+  "sloptube": {
+    "repository": "zoomzoom707/SlopTube",
+    "commit": "86c4cf12d5995077a1cf40424568ede18dc160a7",
+    "files": ["Geopolitics.txt", "Military.txt", "Others.txt", "Reviews.txt", "Warhammer.txt"],
+    "credit": "zoomzoom707 / SlopTube contributors",
+    "license": "No redistribution license confirmed; fetched locally, not republished",
+    "scope": "Channel IDs only; upstream says maintenance has stopped"
+  },
+  "religion": {
+    "kind": "local-curated",
+    "file": "lists/religion-spirituality.json",
+    "credit": "TV Channel Lists contributors; manually reviewed channel preferences with YouTube identity evidence",
+    "license": "CC0-1.0 for our curation and annotations; third-party names/trademarks remain their owners'",
+    "scope": "Religious/devotional/spiritual teachers and new-age influencers; not an exhaustive directory or an accuracy rating"
+  },
+  "minimaltube": {
+    "repository": "iansquenet/minimaltube-list",
+    "commit": "278427964e6c6e9c37845513d6a78ad2afe44c87",
+    "files": ["blocktube_backup.json"],
+    "credit": "iansquenet / MinimalTube",
+    "license": "No redistribution license confirmed; fetched locally, not republished",
+    "scope": "Exact channel IDs only; no title keywords, regexes, JavaScript or general options"
+  }
+}
