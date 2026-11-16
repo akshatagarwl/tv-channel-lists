@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import sys
 import urllib.request
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent
 ID = re.compile(r'UC[\w-]{22}', re.ASCII)
@@ -46,7 +47,24 @@ def smarttube_entries(text):
     return result
 
 
-def build(fetch=False, personal=None, selected_sources=None, output=None):
+def merge_curated_personal(manual, entries):
+    """Add reviewed preferences without relabeling them as a community source."""
+    result = dict(manual)
+    for entry in entries:
+        if entry.get('approved') is not True:
+            continue
+        channel = entry.get('id', '')
+        name = entry.get('name', '').strip()
+        url = urlsplit(entry.get('source_url', ''))
+        if (not ID.fullmatch(channel) or not name or any(ord(c) < 32 for c in name)
+                or url.scheme != 'https' or url.netloc != 'www.youtube.com'
+                or url.query or url.fragment):
+            raise ValueError('Curated personal channel missing valid ID/name/YouTube evidence')
+        result.setdefault('id:' + channel, name)
+    return result
+
+
+def build(fetch=False, personal=None, selected_sources=None, output=None, personal_curated=None):
     sources = json.loads((ROOT / 'sources.json').read_text())
     if selected_sources is not None:
         if not selected_sources or set(selected_sources) - set(sources):
@@ -128,6 +146,8 @@ def build(fetch=False, personal=None, selected_sources=None, output=None):
         if len(rows) < previous_count / 2:
             raise ValueError('Source shrank by over 50%; review before replacing the last good snapshot')
     manual = smarttube_entries(Path(personal).read_text()) if personal else {}
+    for path in personal_curated or []:
+        manual = merge_curated_personal(manual, json.loads(Path(path).read_text()))
     manual_ids = {key[3:] for key in manual if key.startswith('id:')}
     summary = {'source_counts': counts, 'community_channels': len(rows),
                'community_allowlisted': len(allowed), 'personal_entries': len(manual),
@@ -147,8 +167,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--fetch', action='store_true', help='Fetch the pinned source snapshots')
     parser.add_argument('--personal', help='Optional private SmartTube blocked_channel_data file')
+    parser.add_argument('--personal-curated', nargs='+', type=Path,
+                        help='Reviewed exact-ID preferences to merge into personal.json, not community sources')
     parser.add_argument('--sources', nargs='+', choices=SOURCE_BITS,
                         help='Build only selected sources; use a separate --output for a small subset')
     parser.add_argument('--output', type=Path, help='Output directory (default: ignored data/)')
     args = parser.parse_args()
-    build(args.fetch, args.personal, args.sources, args.output)
+    build(args.fetch, args.personal, args.sources, args.output, args.personal_curated)

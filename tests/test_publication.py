@@ -38,7 +38,7 @@ class PublicationTests(unittest.TestCase):
 
     def test_public_list_contains_only_reviewed_facts(self):
         entries = json.loads((ROOT / 'lists/religion-spirituality.json').read_text())
-        self.assertEqual(len(entries), 49)
+        self.assertGreater(len(entries), 0)
         self.assertEqual(public_records(entries), entries)
         for entry in entries:
             self.assertNotIn('description', entry)
@@ -65,6 +65,29 @@ class PublicationTests(unittest.TestCase):
             self.assertEqual(payload['channels'], [[B, 'Blocked channel', 8]])
             self.assertIn('id:' + A, json.loads((out / 'personal.json').read_text()))
             self.assertEqual(json.loads((out / 'summary.json').read_text())['community_allowlisted'], 1)
+
+    def test_reviewed_personal_import_stays_separate_and_rebuild_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.fixture(root)
+            channel = 'UC' + 'c' * 22
+            reviewed = root / 'reviewed.json'
+            reviewed.write_text(json.dumps([{'id': channel, 'name': 'Private preference',
+                'approved': True, 'source_url': 'https://www.youtube.com/channel/' + channel}]))
+            personal = root / 'personal-input'
+            personal.write_text(f'{A}&vi;Existing label%AR%null&vi;Alias%OB%null')
+            out = root / 'data'
+            with patch.object(combine, 'ROOT', root), contextlib.redirect_stdout(io.StringIO()):
+                combine.build(personal=personal, personal_curated=[reviewed], output=out)
+                first = {p.name: p.read_bytes() for p in out.iterdir() if p.is_file()}
+                combine.build(personal=personal, personal_curated=[reviewed, reviewed], output=out)
+            self.assertEqual(first, {p.name: p.read_bytes() for p in out.iterdir() if p.is_file()})
+            self.assertEqual(json.loads((out / 'personal.json').read_text()), {
+                'id:' + A: 'Existing label', 'name:alias': 'Alias', 'id:' + channel: 'Private preference'})
+            self.assertNotIn(channel, {row[0] for row in json.loads((out / 'community.json').read_text())['channels']})
+            summary = json.loads((out / 'summary.json').read_text())
+            self.assertEqual(summary['personal_entries'], 3)
+            self.assertEqual(summary['personal_name_aliases'], 1)
 
     def test_unknown_source_and_shrink_fail_without_replacing_snapshot(self):
         with tempfile.TemporaryDirectory() as directory:

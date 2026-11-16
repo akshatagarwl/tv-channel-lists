@@ -8,7 +8,7 @@ These are optional preference filters, **not authoritative media-bias, misinform
 
 | File | Purpose | License |
 | --- | --- | --- |
-| [`lists/religion-spirituality.json`](lists/religion-spirituality.json) | 49 manually reviewed channels: devotional/religious teaching, spiritual teachers, new-age/manifestation/astrology and selected re-uploaders | CC0-1.0 for our curation/annotations |
+| [`lists/religion-spirituality.json`](lists/religion-spirituality.json) | Manually reviewed channels: devotional/religious teaching, spiritual teachers, new-age/manifestation/astrology and selected re-uploaders | CC0-1.0 for our curation/annotations |
 
 Public records contain only channel IDs, names, categories, evidence URLs, review timestamps and manual approval. Publisher biographies, contact details, raw review files, account information and personal SmartTube exports are not published. Names/trademarks remain their owners'; CC0 does not grant endorsement or rights over third-party content. Full dedication: [`lists/LICENSE`](lists/LICENSE).
 
@@ -36,7 +36,15 @@ A separate output directory avoids comparing a small source subset against the f
 python3 combine.py --fetch
 # Optional, local only:
 python3 combine.py --personal /private/path/to/blocked_channel_data
+# Merge separately reviewed private preferences (same approved identity-record format):
+python3 combine.py --personal /private/path/to/blocked_channel_data \
+  --personal-curated data/reviewed-media.json
 ```
+
+`--personal-curated` adds exact IDs to `personal.json`, not to any community source or mask bit.
+Only boolean-approved records with YouTube identity evidence are accepted. Existing personal
+labels and name aliases are preserved; duplicate IDs and repeated imports add nothing new.
+This generates import data only: it does not update the running TV or embed preferences in JavaScript.
 
 Fetching an external source locally is not permission to redistribute it. Do not upload combined snapshots or fetched files under this repository's licenses. Review source changes before updating pins; there are no automatic list updates.
 
@@ -47,7 +55,7 @@ Generated files are ignored/private:
 - `community.json`: `[channel ID, display name, source-bitmask]` records.
 - `community.gz.b64`: compressed payload for the companion TizenTube build.
 - `provenance.json`: source commits, licensing notes, exact file hashes and source counts.
-- `personal.json`: private SmartTube entries, never folded into the public curation.
+- `personal.json`: private SmartTube entries plus explicitly supplied reviewed preferences, never folded into the public curation.
 - `summary.json`: counts, overlaps and storage footprint.
 
 Local exceptions belong in ignored `allowlist.txt`, one exact channel ID per line. They are private preferences, not part of the published list. Personal blocks still win. A >50% shrink or excessive packed storage footprint aborts before replacing the last good output. The storage guard leaves headroom below Chromium's 5 MiB localStorage quota; do not bypass it or silently truncate channels.
